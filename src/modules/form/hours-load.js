@@ -1,53 +1,58 @@
-import dayjs from 'dayjs';
-import {openingHours} from '../../utils/opening-hours.js';
-import { hoursClick } from './hours-click.js';
+    import dayjs from 'dayjs';
+    import {openingHours} from '../../utils/opening-hours.js';
+    import { hoursClick } from './hours-click.js';
 
 
-const hours = document.getElementById('hours');
+    const hours = document.getElementById('hours');
 
-export function hoursLoad({ date }){
-   //Limpa os horarios existentes
-   hours.innerHTML = '';
-    const opening = openingHours.map((hour) =>{
-    //Reucupera somente a hora
-    const [scheduleHour] = hour.split(":")
+    export function hoursLoad({ date, dailySchedules }){
+    //Limpa os horarios existentes
+    hours.innerHTML = '';
 
-    //Adiciona a hora na date e verifica se está no passado
-    const isHourPast = dayjs(date).add(scheduleHour, 'hours').isBefore(dayjs())
-  
+    //Obtem os horarios indisponiveis
+    const unavailableHours = dailySchedules.map((schedule) => dayjs(schedule.when).format('HH:mm'));
+    const availableHours = openingHours.filter((hour) => !unavailableHours.includes(hour));
 
-    //Define se o horario esta disponivel
+        const opening = openingHours.map((hour) =>{
+        //Reucupera somente a hora
+        const [scheduleHour] = hour.split(":")
 
-    return  {
-        hour,
-        available: !isHourPast,
+        //Adiciona a hora na date e verifica se está no passado
+        const isHourPast = dayjs(date).add(scheduleHour, 'hour').isBefore(dayjs())
+    
+
+        const available = !unavailableHours.includes(hour) && !isHourPast;
+
+        return  {
+            hour,
+            available
+        }
+    })
+
+    //Renderiza os horarios na tela
+    opening.forEach(({hour, available}) =>{
+        const li = document.createElement('li');
+
+        li.classList.add("hour");
+        li.classList.add(available ? "hour-available" : "hour-unavailable");
+        li.textContent = hour;
+
+        if(hour === "9:00"){
+            hourHeaderAdd("Manhã");
+        }else if(hour === "13:00"){
+            hourHeaderAdd("Tarde");
+        }else if(hour === "19:00"){
+            hourHeaderAdd("Noite");
+        }
+        hours.append(li);
+    })
+    //Adiciona o evento de click nos horarios disponiveis
+    hoursClick();
     }
- })
 
- //Renderiza os horarios na tela
- opening.forEach(({hour, available}) =>{
-    const li = document.createElement('li');
-
-    li.classList.add("hour");
-    li.classList.add(available ? "hour-available" : "hour-unavailable");
-    li.textContent = hour;
-
-    if(hour === "9:00"){
-        hourHeaderAdd("Manhã");
-    }else if(hour === "13:00"){
-        hourHeaderAdd("Tarde");
-    }else if(hour === "19:00"){
-        hourHeaderAdd("Noite");
+    function hourHeaderAdd(title){
+        const header = document.createElement('li');
+        header.classList.add("hour-period");
+        header.textContent = title;
+        hours.append(header);
     }
-    hours.append(li);
- })
- //Adiciona o evento de click nos horarios disponiveis
- hoursClick();
-}
-
-function hourHeaderAdd(title){
-    const header = document.createElement('li');
-    header.classList.add("hour-period");
-    header.textContent = title;
-    hours.append(header);
-}

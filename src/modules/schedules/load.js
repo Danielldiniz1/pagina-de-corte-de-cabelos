@@ -16,5 +16,5 @@ export async function schedulesDay(){
 
 
     //Carrega os horários disponíveis
-    hoursLoad({date});
+    hoursLoad({date, dailySchedules});
 }
